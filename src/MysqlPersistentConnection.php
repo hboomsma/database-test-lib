@@ -28,6 +28,8 @@ class MysqlPersistentConnection implements ConnectionInterface
 
     const CMD_TRAVIS = __DIR__ . '/../bin/mysql_travis.sh';
 
+    const CMD_GITLAB = __DIR__ . '/../bin/mysql_travis.sh';
+
     /**
      * @var array
      */
@@ -52,8 +54,15 @@ class MysqlPersistentConnection implements ConnectionInterface
             0 => ['pipe', 'r'],  // stdin is a pipe that the child will read from
             1 => ['pipe', 'w'],  // stdout is a pipe that the child will write to
         ];
+        print_r(getenv());
 
-        $cmd           = getenv('TRAVIS') ? self::CMD_TRAVIS : self::CMD_PERSISTENT;
+        $cmd = self::CMD_PERSISTENT;
+        if (getenv('TRAVIS')) {
+            $cmd = self::CMD_TRAVIS;
+        } elseif (isset($_ENV['GITLAB_CI'])) {
+            $cmd = self::CMD_GITLAB;
+        }
+
         $this->process = proc_open($cmd, $descriptor_spec, $pipes);
         $data          = fread($pipes[1], 1024);
 
